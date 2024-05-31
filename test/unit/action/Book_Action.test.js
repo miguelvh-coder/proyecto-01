@@ -1,61 +1,54 @@
-const Book = require('../models/bookModel');
+const request = require('supertest');
+const app = require('../app');  // El archivo que inicializa tu app Express
+const mongoose = require('mongoose');
+const Book = require('../models/book'); // Ajusta la ruta según tu estructura
 
-// Crear un nuevo libro
-exports.createBook = async (req, res) => {
-  try {
-    const book = new Book(req.body);
-    await book.save();
-    res.status(201).send(book);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-};
+beforeAll(async () => {
+  // Conectar a la base de datos de prueba
+  await mongoose.connect('mongodb://localhost:27017/testdb', { useNewUrlParser: true, useUnifiedTopology: true });
+});
 
-// Obtener todos los libros
-exports.getBooks = async (req, res) => {
-  try {
-    const books = await Book.find();
-    res.status(200).send(books);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-};
+afterAll(async () => {
+  // Limpiar y cerrar la conexión
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+});
 
-// Obtener un libro por ID
-exports.getBookById = async (req, res) => {
-  try {
-    const book = await Book.findById(req.params.id);
-    if (!book) {
-      return res.status(404).send();
-    }
-    res.status(200).send(book);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-};
+describe('Book API', () => {
+  let bookId;
 
-// Actualizar un libro por ID
-exports.updateBookById = async (req, res) => {
-  try {
-    const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!book) {
-      return res.status(404).send();
-    }
-    res.status(200).send(book);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-};
+  it('should create a new book', async () => {
+    const res = await request(app)
+      .post('/books')
+      .send({
+        title: 'Test Book',
+        author: 'Test Author',
+        price: 10.99
+      });
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toHaveProperty('_id');
+    bookId = res.body._id;
+  });
 
-// Eliminar un libro por ID
-exports.deleteBookById = async (req, res) => {
-  try {
-    const book = await Book.findByIdAndDelete(req.params.id);
-    if (!book) {
-      return res.status(404).send();
-    }
-    res.status(200).send(book);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-};
+  it('should get a book by id', async () => {
+    const res = await request(app).get(`/books/${bookId}`);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toHaveProperty('title', 'Test Book');
+  });
+
+  it('should update a book', async () => {
+    const res = await request(app)
+      .put(`/books/${bookId}`)
+      .send({
+        price: 12.99
+      });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toHaveProperty('price', 12.99);
+  });
+
+  it('should delete a book', async () => {
+    const res = await request(app).delete(`/books/${bookId}`);
+    expect(res.statusCode).toEqual(204);
+  });
+});
+
