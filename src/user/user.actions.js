@@ -1,12 +1,21 @@
 const User = require("./user.model");
+const { respondWithError, throwCustomError } = require("../../utils/function");
 
 async function getUserById(id) {
   const user = await User.findById(id);
+  
+  if(!user){
+    return throwCustomError( 404, "Usuario no existe" );
+  }
+  if(user.eliminado){
+    return throwCustomError( 404, "Usuario no existe" );
+  }
   return user;
 }
 
 async function createUser(data) {
   const newUser = await User.create(data);
+
   return newUser;
 }
 
