@@ -2,6 +2,8 @@ const Order = require("./order.model");
 const bookActions = require("../book/book.actions");
 const userActions = require("../user/user.actions");
 
+const { respondWithError, throwCustomError } = require("../../utils/function");
+
 async function createOrder(data) {
   const newOrder = await Order.create(data);
   return newOrder;
@@ -9,7 +11,9 @@ async function createOrder(data) {
 
 async function getOrder(idOrder) {
   const order = await Order.findById(idOrder);
-  return order;
+  if(order){return order;}else{
+    return throwCustomError( 404, "Orden inexiste" );
+  }
 }
 
 async function getOrders(userId, filtros) {

@@ -21,11 +21,10 @@ describe('Pedido unit Actions', () => {
             expect(result).toEqual(pedido);
         });
 
-        it('debería lanzar un error si el usuario está eliminado', async () => {
-            const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
-            User.findById.mockResolvedValue(null);
+        it('debería lanzar un error si la orden no existe', async () => {
+            Order.findById.mockResolvedValue(null);
       
-            await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
+            await expect(getOrder('1')).rejects.toThrow('{"code":404,"msg":"Orden inexiste"}');
           });
 
     });
