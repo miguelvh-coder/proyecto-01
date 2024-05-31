@@ -5,6 +5,11 @@ async function getUserById(id) {
   return user;
 }
 
+async function createUser(data) {
+  const newUser = await User.create(data);
+  return newUser;
+}
+
 async function userUpdate(id, data) {
   const userUpdated = await User.findByIdAndUpdate(id, data);
   return userUpdated;
@@ -25,6 +30,7 @@ async function putOrderInUser(userId, orderId, type) {
 
 module.exports = {
   getUserById,
+  createUser,
   userUpdate,
   deleteUser,
   putOrderInUser,

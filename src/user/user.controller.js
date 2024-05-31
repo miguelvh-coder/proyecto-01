@@ -6,6 +6,22 @@ async function GetUserById(id) {
   return user;
 }
 
+async function createUser(data) {
+  const { contraseña } = data;
+  if (contraseña) {
+    data.contraseña = await auth.encryptPassword(contraseña);
+  }
+  const userCreated = await userActions.createUser(data);
+
+  const userCreatedInfo = {
+    id: userCreated.id,
+    email: userCreated.email,
+    nombre: userCreated.nombre,
+  };
+
+  return userCreatedInfo;
+}
+
 async function updateUser(id, data) {
   const { contraseña } = data;
   if (contraseña) {
@@ -26,4 +42,4 @@ async function deleteUser(id) {
   await userActions.deleteUser(id);
 }
 
-module.exports = { GetUserById, updateUser, deleteUser };
+module.exports = { GetUserById, createUser, updateUser, deleteUser };

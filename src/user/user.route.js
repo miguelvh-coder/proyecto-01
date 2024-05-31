@@ -20,6 +20,19 @@ async function GetUser(req, res) {
   }
 }
 
+async function createUser(req, res) {
+  try {
+
+    const user = await userController.createUser(req.body);
+
+    res
+      .status(200)
+      .json({ msg: "El usuario ha sido actualizado correctamente.", user: user });
+  } catch (e) {
+    respondWithError(res, e);
+  }
+}
+
 async function UpdateUser(req, res) {
   try {
     if (req.userId != req.params.id) {
@@ -57,6 +70,7 @@ async function DeleteUser(req, res) {
 }
 
 router.get("/:id", verifyToken, GetUser); //Obtener un usuario
+router.post("/create", verifyToken, createUser);
 router.patch("/update/:id", verifyToken, UpdateUser); //Actualizar un usuario
 router.patch("/delete/:id", verifyToken, DeleteUser); //Actualizar un usuario
 
