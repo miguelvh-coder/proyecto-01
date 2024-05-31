@@ -6,6 +6,11 @@ async function GetUserById(id) {
   return user;
 }
 
+async function GetUsers() {
+  const users = await userActions.getAllUsers();
+  return users;
+}
+
 async function createUser(data) {
   const { contraseña } = data;
   if (contraseña) {
@@ -42,4 +47,4 @@ async function deleteUser(id) {
   await userActions.deleteUser(id);
 }
 
-module.exports = { GetUserById, createUser, updateUser, deleteUser };
+module.exports = { GetUserById, GetUsers, createUser, updateUser, deleteUser };

@@ -57,6 +57,11 @@ async function updateBook(book_id, data) {
   return updatedBook;
 }
 
+async function deleteBook(book_id) {
+  const BookDeleted = await Book.findByIdAndUpdate(book_id, { eliminado: true });
+  return BookDeleted;
+}
+
 module.exports = {
   createBook,
   getBooks,
@@ -68,4 +73,5 @@ module.exports = {
   getBooksOverallValue,
   getSeller,
   updateBook,
+  deleteBook
 };

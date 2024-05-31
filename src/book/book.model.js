@@ -10,6 +10,7 @@ const schemaLibro = new mongoose.Schema(
     dueño: { type: mongoose.Schema.Types.ObjectId},
     disponible: { type: Boolean, default: true },
     precio: { type: Number, required: true },
+    eliminado: { type: Boolean, default: false },
   },
   {
     versionKey: false,

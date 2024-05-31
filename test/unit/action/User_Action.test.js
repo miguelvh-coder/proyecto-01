@@ -1,4 +1,4 @@
-const { getUserById, getAllUsers, createUser, userUpdate, deleteUser} = require('../../../src/user/user.actions');
+const { getUserById, getAllUsers, createUser, userUpdate, deleteUser } = require('../../../src/user/user.actions');
 const User = require('../../../src/user/user.model');
 jest.mock('../../../src/user/user.model');
 
@@ -38,17 +38,17 @@ describe('Usuario unit Actions', () => {
         { _id: '3', nombre: 'Usuario 3', isDeleted: false },
       ];
       User.find.mockResolvedValue(usuarios);
-  
+
       const result = await getAllUsers();
-  
+
       expect(result).toEqual(usuarios);
     });
-  
+
     it('debería devolver una lista vacía si no hay usuarios', async () => {
       User.find.mockResolvedValue([]);
-  
+
       const result = await getAllUsers();
-  
+
       expect(result).toEqual([]);
     });
 
@@ -86,7 +86,7 @@ describe('Usuario unit Actions', () => {
 
   describe('UPDATE User', () => {
 
-    it('debería actualizar un nuevo usuario', async () => {
+    it('debería actualizar un usuario', async () => {
       const datos = { nombre: 'Nuevo Usuario' };
       const usuarioCreado = { _id: '1', ...datos };
       User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario

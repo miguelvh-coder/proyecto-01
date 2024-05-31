@@ -1,54 +1,150 @@
-const request = require('supertest');
-const app = require('../app');  // El archivo que inicializa tu app Express
-const mongoose = require('mongoose');
-const Book = require('../models/book'); // Ajusta la ruta según tu estructura
+const { createBook, getBooks, getBookById, updateBook, deleteBook } = require('../../../src/book/book.actions');
+const Book = require('../../../src/book/book.model');
+jest.mock('../../../src/book/book.model');
 
-beforeAll(async () => {
-  // Conectar a la base de datos de prueba
-  await mongoose.connect('mongodb://localhost:27017/testdb', { useNewUrlParser: true, useUnifiedTopology: true });
-});
 
-afterAll(async () => {
-  // Limpiar y cerrar la conexión
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-});
+//  1/3 pruebas unitarias de las funciones del usuario  //
 
-describe('Book API', () => {
-  let bookId;
+describe('Usuario unit Actions', () => {
 
-  it('should create a new book', async () => {
-    const res = await request(app)
-      .post('/books')
-      .send({
-        title: 'Test Book',
-        author: 'Test Author',
-        price: 10.99
+  describe('READ User (1 y *)', () => {
+    it('debería devolver un usuario por ID', async () => {
+      const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: false };
+      User.findById.mockResolvedValue(usuario);
+
+      const result = await getUserById('1');
+
+      expect(result).toEqual(usuario);
+    });
+
+    it('debería lanzar un error si el usuario está eliminado', async () => {
+      const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
+      User.findById.mockResolvedValue(null);
+
+      await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
+    });
+
+    it('debería lanzar un error si el usuario no existe', async () => {
+      User.findById.mockResolvedValue(null);
+
+      await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
+    });
+
+    //para varios usuarios
+    it('debería devolver una lista de usuarios', async () => {
+      const usuarios = [
+        { _id: '1', nombre: 'Usuario 1', isDeleted: false },
+        { _id: '2', nombre: 'Usuario 2', isDeleted: false },
+        { _id: '3', nombre: 'Usuario 3', isDeleted: false },
+      ];
+      User.find.mockResolvedValue(usuarios);
+
+      const result = await getAllUsers();
+
+      expect(result).toEqual(usuarios);
+    });
+
+    it('debería devolver una lista vacía si no hay usuarios', async () => {
+      User.find.mockResolvedValue([]);
+
+      const result = await getAllUsers();
+
+      expect(result).toEqual([]);
+    });
+
+  });
+
+
+
+  describe('CREATE User', () => {
+    it('debería crear un nuevo usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario' };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado);
+
+      const result = await createUser(datos);
+
+      expect(result).toEqual(usuarioCreado);
+    });
+
+    it('debería lanzar un error si los datos son inválidos', async () => {
+      const datos = {}; // Datos inválidos
+      User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
+
+      await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
+    });
+
+    it('debería lanzar un error si ocurre un problema al crear el usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario' };
+      User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
+
+      await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
+    });
+  });
+
+
+
+  describe('UPDATE User', () => {
+
+    it('debería actualizar un usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario' };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      const a = await createUser(datos);
+
+      const nuevos_datos = { nombre: 'Nuevo NOMBRE' };
+      const usuarioActualizado = { _id: '1', ...nuevos_datos };
+      User.findByIdAndUpdate.mockResolvedValue(usuarioActualizado); // Mock de la actualización de usuario
+
+      const result = await userUpdate('1', nuevos_datos); // Llama a userUpdate
+      expect(result).toEqual(usuarioActualizado);
+    });
+
+    it('debería lanzar un error si los datos son inválidos', async () => {
+      const datos = { nombre: 'Nuevo Usuario' };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      await createUser(datos);
+
+      const nuevos_datos = {};
+      User.findByIdAndUpdate.mockRejectedValue(new Error('{"code":500,"msg":"Error actualizando los datos"}')); // Mock de la actualización de usuario
+
+      await expect(userUpdate('1', nuevos_datos)).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
+    });
+
+  });
+
+
+  describe('Delete User', () => {
+
+    it('eliminar un usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario', eliminado: false };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      const a = await createUser(datos);
+
+      const eliminando = { eliminado: true };
+      const usuarioActualizado = { _id: '1', ...eliminando };
+      User.findByIdAndUpdate.mockResolvedValue(usuarioActualizado); // Mock de la actualización de usuario
+
+      const result = await deleteUser('1'); // Llama a userUpdate
+      expect(result).toEqual(usuarioActualizado);
+    });
+
+    it('eliminar un usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario', eliminado: false };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      await createUser(datos);
+
+      User.findByIdAndUpdate.mockImplementation(() => {
+        throw new Error('{"code":500,"msg":"Error actualizando los datos"}');
       });
-    expect(res.statusCode).toEqual(201);
-    expect(res.body).toHaveProperty('_id');
-    bookId = res.body._id;
+
+      await expect(deleteUser('1')).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
+    });
+
   });
 
-  it('should get a book by id', async () => {
-    const res = await request(app).get(`/books/${bookId}`);
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty('title', 'Test Book');
-  });
-
-  it('should update a book', async () => {
-    const res = await request(app)
-      .put(`/books/${bookId}`)
-      .send({
-        price: 12.99
-      });
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty('price', 12.99);
-  });
-
-  it('should delete a book', async () => {
-    const res = await request(app).delete(`/books/${bookId}`);
-    expect(res.statusCode).toEqual(204);
-  });
-});
+})
 
