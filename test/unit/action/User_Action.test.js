@@ -5,7 +5,7 @@ jest.mock('../../../src/user/user.model');
 
 describe('Usuario unit Actions', () => {
 
-  describe('getUserById', () => {
+  describe('READ User', () => {
     it('debería devolver un usuario por ID', async () => {
       const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: false };
       User.findById.mockResolvedValue(usuario);
@@ -14,7 +14,7 @@ describe('Usuario unit Actions', () => {
 
       expect(result).toEqual(usuario);
     });
-    
+
     it('debería lanzar un error si el usuario está eliminado', async () => {
       const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
       User.findById.mockResolvedValue(null);
@@ -27,12 +27,12 @@ describe('Usuario unit Actions', () => {
 
       await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
     });
-    
+
   });
 
 
 
-  describe('createUser', () => {
+  describe('CREATE User', () => {
     it('debería crear un nuevo usuario', async () => {
       const datos = { nombre: 'Nuevo Usuario' };
       const usuarioCreado = { _id: '1', ...datos };
@@ -41,6 +41,41 @@ describe('Usuario unit Actions', () => {
       const result = await createUser(datos);
 
       expect(result).toEqual(usuarioCreado);
+    });
+
+    it('debería lanzar un error si los datos son inválidos', async () => {
+      const datos = {}; // Datos inválidos
+      User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
+
+      await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
+    });
+
+    it('debería lanzar un error si ocurre un problema al crear el usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario' };
+      User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
+
+      await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
+    });
+  });
+
+
+  describe('UPDATE User', () => {
+    it('debería actualizar un nuevo usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario' };
+      const usuarioCreado = { _id: '1', ...datos };
+
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      const a = await createUser(datos);
+
+      const nuevos_datos = { nombre: 'Nuevo NOMBRE' };
+      const usuarioActualizado = { _id: '1', ...nuevos_datos };
+
+      User.findByIdAndUpdate.mockResolvedValue(usuarioActualizado); // Mock de la actualización de usuario
+
+      const result = await userUpdate('1', nuevos_datos); // Llama a userUpdate
+      console.log('Usuario actualizado', result);
+
+      expect(result).toEqual(usuarioActualizado);
     });
 
     it('debería lanzar un error si los datos son inválidos', async () => {
