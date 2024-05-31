@@ -1,58 +1,34 @@
 const { createOrder, getOrder, getOrders, updateOrderComprador, updateOrderVendedor } = require('../../../src/order/order.actions');
 const Order = require('../../../src/order/order.model');
+const User = require('../../../src/user/user.model');
+const Libro = require('../../../src/book/book.model');
 jest.mock('../../../src/order/order.model');
-
+jest.mock('../../../src/user/user.model');
+jest.mock('../../../src/book/book.model');
 
 //  1/3 pruebas unitarias de las funciones de los pedidos  //
 
 describe('Pedido unit Actions', () => {
 
     describe('READ Order (1 y *)', () => {
-        it('debería devolver un usuario por ID', async () => {
-          const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: false };
-          User.findById.mockResolvedValue(usuario);
-    
-          const result = await getUserById('1');
-    
-          expect(result).toEqual(usuario);
+        it('debería devolver una orden por ID', async () => {
+            const libros = [{ _id: '1', titulo: 'Libro 1' }, { _id: '2', titulo: 'Libro 2' }];
+            const pedido = { _id: '1', libros_ids: libros, estado: "en progreso", direccion_envio: "aca" };
+            Order.findById.mockResolvedValue(pedido);
+
+            const result = await getOrder('1');
+
+            expect(result).toEqual(pedido);
         });
-    
+
         it('debería lanzar un error si el usuario está eliminado', async () => {
-          const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
-          User.findById.mockResolvedValue(null);
-    
-          await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
-        });
-    
-        it('debería lanzar un error si el usuario no existe', async () => {
-          User.findById.mockResolvedValue(null);
-    
-          await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
-        });
-    
-        //para varios usuarios
-        it('debería devolver una lista de usuarios', async () => {
-          const usuarios = [
-            { _id: '1', nombre: 'Usuario 1', isDeleted: false },
-            { _id: '2', nombre: 'Usuario 2', isDeleted: false },
-            { _id: '3', nombre: 'Usuario 3', isDeleted: false },
-          ];
-          User.find.mockResolvedValue(usuarios);
+            const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
+            User.findById.mockResolvedValue(null);
       
-          const result = await getAllUsers();
-      
-          expect(result).toEqual(usuarios);
-        });
-      
-        it('debería devolver una lista vacía si no hay usuarios', async () => {
-          User.find.mockResolvedValue([]);
-      
-          const result = await getAllUsers();
-      
-          expect(result).toEqual([]);
-        });
-    
-      });
+            await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
+          });
+
+    });
 
 
 });
