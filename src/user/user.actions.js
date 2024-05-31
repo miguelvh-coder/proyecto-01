@@ -25,8 +25,8 @@ async function userUpdate(id, data) {
 }
 
 async function deleteUser(id) {
-  const filter = { deleted: true };
-  await userUpdate(id, filter);
+  const userDeleted = await userUpdate(id, { eliminado: true });
+  return userDeleted;
 }
 
 async function putOrderInUser(userId, orderId, type) {

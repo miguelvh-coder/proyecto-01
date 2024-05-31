@@ -3,6 +3,8 @@ const User = require('../../../src/user/user.model');
 jest.mock('../../../src/user/user.model');
 
 
+//  1/3 pruebas unitarias de las funciones del usuario
+
 describe('Usuario unit Actions', () => {
 
   describe('READ User', () => {
@@ -59,37 +61,67 @@ describe('Usuario unit Actions', () => {
   });
 
 
+
   describe('UPDATE User', () => {
+
     it('debería actualizar un nuevo usuario', async () => {
       const datos = { nombre: 'Nuevo Usuario' };
       const usuarioCreado = { _id: '1', ...datos };
-
       User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
       const a = await createUser(datos);
 
       const nuevos_datos = { nombre: 'Nuevo NOMBRE' };
       const usuarioActualizado = { _id: '1', ...nuevos_datos };
-
       User.findByIdAndUpdate.mockResolvedValue(usuarioActualizado); // Mock de la actualización de usuario
 
       const result = await userUpdate('1', nuevos_datos); // Llama a userUpdate
-      console.log('Usuario actualizado', result);
-
       expect(result).toEqual(usuarioActualizado);
     });
 
     it('debería lanzar un error si los datos son inválidos', async () => {
-      const datos = {}; // Datos inválidos
-      User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
-
-      await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
-    });
-
-    it('debería lanzar un error si ocurre un problema al crear el usuario', async () => {
       const datos = { nombre: 'Nuevo Usuario' };
-      User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      await createUser(datos);
 
-      await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
+      const nuevos_datos = {};
+      User.findByIdAndUpdate.mockRejectedValue(new Error('{"code":500,"msg":"Error actualizando los datos"}')); // Mock de la actualización de usuario
+
+      await expect(userUpdate('1', nuevos_datos)).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
     });
+
   });
+
+
+  describe('Delete User', () => {
+
+    it('eliminar un usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario', eliminado: false };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      const a = await createUser(datos);
+
+      const eliminando = { eliminado: true };
+      const usuarioActualizado = { _id: '1', ...eliminando };
+      User.findByIdAndUpdate.mockResolvedValue(usuarioActualizado); // Mock de la actualización de usuario
+
+      const result = await deleteUser('1'); // Llama a userUpdate
+      expect(result).toEqual(usuarioActualizado);
+    });
+
+    it('eliminar un usuario', async () => {
+      const datos = { nombre: 'Nuevo Usuario', eliminado: false };
+      const usuarioCreado = { _id: '1', ...datos };
+      User.create.mockResolvedValue(usuarioCreado); // Mock de la creación de usuario
+      await createUser(datos);
+
+      User.findByIdAndUpdate.mockImplementation(() => {
+        throw new Error('{"code":500,"msg":"Error actualizando los datos"}');
+      });
+
+      await expect(deleteUser('1')).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
+    });
+
+  });
+
 })
