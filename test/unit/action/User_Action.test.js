@@ -1,13 +1,13 @@
-const { getUserById, createUser, userUpdate, deleteUser, putOrderInUser } = require('../../../src/user/user.actions');
+const { getUserById, getAllUsers, createUser, userUpdate, deleteUser} = require('../../../src/user/user.actions');
 const User = require('../../../src/user/user.model');
 jest.mock('../../../src/user/user.model');
 
 
-//  1/3 pruebas unitarias de las funciones del usuario
+//  1/3 pruebas unitarias de las funciones del usuario  //
 
 describe('Usuario unit Actions', () => {
 
-  describe('READ User', () => {
+  describe('READ User (1)', () => {
     it('debería devolver un usuario por ID', async () => {
       const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: false };
       User.findById.mockResolvedValue(usuario);
@@ -28,6 +28,32 @@ describe('Usuario unit Actions', () => {
       User.findById.mockResolvedValue(null);
 
       await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
+    });
+
+  });
+
+
+  describe('READ User (*)', () => {
+
+    it('debería devolver una lista de usuarios', async () => {
+      const usuarios = [
+        { _id: '1', nombre: 'Usuario 1', isDeleted: false },
+        { _id: '2', nombre: 'Usuario 2', isDeleted: false },
+        { _id: '3', nombre: 'Usuario 3', isDeleted: false },
+      ];
+      User.find.mockResolvedValue(usuarios);
+  
+      const result = await getAllUsers();
+  
+      expect(result).toEqual(usuarios);
+    });
+  
+    it('debería devolver una lista vacía si no hay usuarios', async () => {
+      User.find.mockResolvedValue([]);
+  
+      const result = await getAllUsers();
+  
+      expect(result).toEqual([]);
     });
 
   });

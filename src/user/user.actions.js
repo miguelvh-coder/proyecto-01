@@ -13,6 +13,13 @@ async function getUserById(id) {
   return user;
 }
 
+const getAllUsers = async () => {
+  const users = await User.find({ isDeleted: false });
+  return users;
+};
+
+
+
 async function createUser(data) {
   const newUser = await User.create(data);
 
@@ -39,6 +46,7 @@ async function putOrderInUser(userId, orderId, type) {
 
 module.exports = {
   getUserById,
+  getAllUsers,
   createUser,
   userUpdate,
   deleteUser,
