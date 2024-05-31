@@ -7,7 +7,7 @@ jest.mock('../../../src/user/user.model');
 
 describe('Usuario unit Actions', () => {
 
-  describe('READ User (1)', () => {
+  describe('READ User (1 y *)', () => {
     it('debería devolver un usuario por ID', async () => {
       const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: false };
       User.findById.mockResolvedValue(usuario);
@@ -30,11 +30,7 @@ describe('Usuario unit Actions', () => {
       await expect(getUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
     });
 
-  });
-
-
-  describe('READ User (*)', () => {
-
+    //para varios usuarios
     it('debería devolver una lista de usuarios', async () => {
       const usuarios = [
         { _id: '1', nombre: 'Usuario 1', isDeleted: false },
