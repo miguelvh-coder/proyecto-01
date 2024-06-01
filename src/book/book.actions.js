@@ -1,19 +1,26 @@
 const Book = require("./book.model");
+const { respondWithError, throwCustomError } = require("../../utils/function");
 
 async function createBook(data) {
   const newBook = await Book.create(data);
   return newBook;
 }
 
-async function getBooks(filters) {
-  filters = { ...filters, disponible: true };
-  const numberOfBooks = await Book.countDocuments(filters);
+async function getBooks() {
+  const filters = { eliminado: false };
+  //const numberOfBooks = await Book.countDocuments(filters);
   const books = await Book.find(filters);
-  return { numberOfBooks, books };
+  return books;
 }
 
 async function getBookById(id) {
   const book = await Book.findById(id);
+  if(!book){
+    return throwCustomError( 404, "Libro no existe" );
+  }
+  if(book.eliminado){
+    return throwCustomError( 404, "Libro no existe" );
+  }
   return book;
 }
 

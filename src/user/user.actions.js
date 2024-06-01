@@ -14,7 +14,7 @@ async function getUserById(id) {
 }
 
 const getAllUsers = async () => {
-  const users = await User.find({ isDeleted: false });
+  const users = await User.find({ eliminado: false });
   return users;
 };
 
