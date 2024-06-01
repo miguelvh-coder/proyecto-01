@@ -59,7 +59,7 @@ describe('Books Unit Actions', () => {
 
   describe('CREATE Book', () => {
     it('debería crear un nuevo usuario', async () => {
-      const datos = { nombre: 'Librito', preci: '200' };
+      const datos = { nombre: 'Librito', precio: '200' };
       const libroCreado = { _id: '1', ...datos };
       Book.create.mockResolvedValue(libroCreado);
 
@@ -81,6 +81,67 @@ describe('Books Unit Actions', () => {
 
       await expect(createBook(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en el libro"}');
     });
+  });
+
+
+
+  describe('UPDATE Libro', () => {
+
+    it('debería actualizar un libro', async () => {
+      const id = '1';
+      const datos = { nombre: 'Librito Actualizado', precio: '250' };
+      const libroActualizado = { _id: id, ...datos };
+
+      Book.findByIdAndUpdate.mockResolvedValue(libroActualizado);
+      const result = await updateBook(id, datos);
+      expect(result).toEqual(libroActualizado);
+
+      // Verificar que se llamó a la función de actualización del libro
+      expect(Book.findByIdAndUpdate).toHaveBeenCalledWith(id, datos);
+    });
+
+    it('debería lanzar un error si los datos son inválidos', async () => {
+      const id = '1';
+      const datos = { nombre: 'Librito Actualizado', precio: '250' };
+
+      Book.findByIdAndUpdate.mockRejectedValue(new Error('{"code":500,"msg":"Error actualizando los datos"}'));
+
+      await expect(updateBook(id, datos)).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
+    });
+
+  });
+
+
+
+  describe('Delete Book', () => {
+
+    it('eliminar un libro', async () => {
+      const datos = { nombre: 'Nuevo Libro', precio: '2000' };
+      const LibroCreado = { id: '1', ...datos };
+      Book.create.mockResolvedValue(LibroCreado); // Mock de la creación de usuario
+      const a = await createBook(datos);
+
+      const eliminando = { eliminado: true };
+      const libroE = { id: '1', ...eliminando };
+      Book.findByIdAndUpdate.mockResolvedValue(libroE); // Mock de la actualización de usuario
+      
+      const result = await deleteBook('1'); // Llama a userUpdate
+      expect(result).toEqual(libroE);
+    });
+
+    it('eliminar un libro con error', async () => {
+      const datos = { nombre: 'libreta', precio: '2000' };
+      const libroC= { _id: '1', ...datos };
+      Book.create.mockResolvedValue(libroC); // Mock de la creación de usuario
+      await createBook(datos);
+
+      Book.findByIdAndUpdate.mockImplementation(() => {
+        throw new Error('{"code":500,"msg":"Error actualizando los datos"}');
+      });
+
+      await expect(deleteBook('1')).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
+    });
+
   });
 
 

@@ -60,7 +60,6 @@ async function getSeller(books_ids) {
 }
 async function updateBook(book_id, data) {
   const updatedBook = await Book.findByIdAndUpdate(book_id, data);
-  await updatedBook.save();
   return updatedBook;
 }
 
