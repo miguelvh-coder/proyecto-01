@@ -57,7 +57,32 @@ describe('Books Unit Actions', () => {
 
 
 
-  
+  describe('CREATE Book', () => {
+    it('debería crear un nuevo usuario', async () => {
+      const datos = { nombre: 'Librito', preci: '200' };
+      const libroCreado = { _id: '1', ...datos };
+      Book.create.mockResolvedValue(libroCreado);
+
+      const result = await createBook(datos);
+
+      expect(result).toEqual(libroCreado);
+    });
+
+    it('debería lanzar un error si los datos son inválidos', async () => {
+      const datos = {}; // Datos inválidos
+      Book.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error en los datos del libro"}') });
+
+      await expect(createBook(datos)).rejects.toThrow('{"code":500,"msg":"Error en los datos del libro"}');
+    });
+
+    it('debería lanzar un error si ocurre un problema al crear el usuario', async () => {
+      const datos = { nombre: 'Nuevo libreria' };
+      Book.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en el libro"}') });
+
+      await expect(createBook(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en el libro"}');
+    });
+  });
+
 
 })
 
