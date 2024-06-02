@@ -1,52 +1,53 @@
+// order.routes.js
 const express = require("express");
 const router = express.Router();
-
-const orderController = require("./order.controller");
-
-const { respondWithError, throwCustomError } = require("../../utils/functions");
-
 const { verifyToken } = require("../auth/auth.actions");
+const orderController = require("./order.controller");
+const { respondWithError } = require("../../utils/function");
 
-async function PostOrder(req, res) {
+router.post("/", verifyToken, async (req, res) => {
   try {
-    req.body.comprador = req.userId;
-    const createdOrder = await orderController.createOrder(req.body);
+    const createdOrder = await orderController.CreateOrder(req.body);
     res.status(201).json(createdOrder);
   } catch (e) {
     respondWithError(res, e);
   }
-}
+});
 
-async function GetOrder(req, res) {
+router.get("/:id", verifyToken, async (req, res) => {
   try {
-    const order = await orderController.getOrder(req.params.id, req.userId);
+    const order = await orderController.GetOrder(req.params.id);
     res.status(200).json(order);
   } catch (e) {
     respondWithError(res, e);
   }
-}
+});
 
-async function GetOrders(req, res) {
+router.get("/", verifyToken, async (req, res) => {
   try {
-    const orders = await orderController.getOrders(req.userId, req.query);
+    const orders = await orderController.GetOrders(req.userId, req.query);
     res.status(200).json(orders);
   } catch (e) {
-    res.status(400).json({ message: e.message });
+    respondWithError(res, e);
   }
-}
+});
 
-async function UpdateOrder(req, res) {
+router.patch("/:id", verifyToken, async (req, res) => {
   try {
-    const order = await orderController.updateOrder(req.params.id, req.userId, req.body);
-    res.status(200).json(order);
+    const updatedOrder = await orderController.UpdateOrder(req.params.id, req.body);
+    res.status(200).json(updatedOrder);
   } catch (e) {
-    throwCustomError(res.status, e);
+    respondWithError(res, e);
   }
-}
+});
 
-router.post("/", verifyToken, PostOrder); //Crear una orden
-router.get("/:id", verifyToken, GetOrder); //Obtener una orden
-router.get("/", verifyToken, GetOrders); //Obtener las ordenes
-router.patch("/update/:id", verifyToken, UpdateOrder); //Actualizar una orden
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const deletedOrder = await orderController.DeleteOrder(req.params.id);
+    res.status(200).json(deletedOrder);
+  } catch (e) {
+    respondWithError(res, e);
+  }
+});
 
 module.exports = router;

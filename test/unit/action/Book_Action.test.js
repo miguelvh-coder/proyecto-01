@@ -19,7 +19,7 @@ describe('Books Unit Actions', () => {
     });
 
     it('debería lanzar un error si el libro está eliminado', async () => {
-      const libro = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
+      const libro = { _id: '1', nombre: 'Test Usuario', eliminado: true };
       Book.findById.mockResolvedValue(null);
 
       await expect(getBookById('1')).rejects.toThrow('{"code":404,"msg":"Libro no existe"}');
@@ -122,7 +122,7 @@ describe('Books Unit Actions', () => {
       const a = await createBook(datos);
 
       const eliminando = { eliminado: true };
-      const libroE = { id: '1', ...eliminando };
+      const libroE = { _id: '1', ...eliminando };
       Book.findByIdAndUpdate.mockResolvedValue(libroE); // Mock de la actualización de usuario
       
       const result = await deleteBook('1'); // Llama a userUpdate

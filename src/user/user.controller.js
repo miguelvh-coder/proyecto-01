@@ -11,7 +11,7 @@ async function GetUsers() {
   return users;
 }
 
-async function createUser(data) {
+async function CreateUser(data) {
   const { contraseña } = data;
   if (contraseña) {
     data.contraseña = await auth.encryptPassword(contraseña);
@@ -19,7 +19,7 @@ async function createUser(data) {
   const userCreated = await userActions.createUser(data);
 
   const userCreatedInfo = {
-    id: userCreated.id,
+    _id: userCreated._id,
     email: userCreated.email,
     nombre: userCreated.nombre,
   };
@@ -27,7 +27,7 @@ async function createUser(data) {
   return userCreatedInfo;
 }
 
-async function updateUser(id, data) {
+async function UpdateUser(id, data) {
   const { contraseña } = data;
   if (contraseña) {
     data.contraseña = await auth.encryptPassword(contraseña);
@@ -43,8 +43,9 @@ async function updateUser(id, data) {
   return updatedUserInfo;
 }
 
-async function deleteUser(id) {
-  await userActions.deleteUser(id);
+async function DeleteUser(id) {
+  const usuario_eliminado = await userActions.deleteUser(id);
+  return usuario_eliminado;
 }
 
-module.exports = { GetUserById, GetUsers, createUser, updateUser, deleteUser };
+module.exports = { GetUserById, GetUsers, CreateUser, UpdateUser, DeleteUser };

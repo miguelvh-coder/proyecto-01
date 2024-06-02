@@ -13,8 +13,8 @@ async function getBooks() {
   return books;
 }
 
-async function getBookById(id) {
-  const book = await Book.findById(id);
+async function getBookById(_id) {
+  const book = await Book.findById(_id);
   if(!book){
     return throwCustomError( 404, "Libro no existe" );
   }

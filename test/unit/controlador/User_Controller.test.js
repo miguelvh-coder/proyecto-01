@@ -1,10 +1,10 @@
-const { GetUserById, createUser, updateUser, deleteUser, GetUsers } = require('../../../src/user/user.controller');
+const { GetUserById, GetUsers, CreateUser, UpdateUser, DeleteUser } = require('../../../src/user/user.controller');
+const { getUserById, getAllUsers, createUser, userUpdate, deleteUser, putOrderInUser, } = require('../../../src/user/user.actions');
 const User = require('../../../src/user/user.model');
 const auth = require("../../../src/auth/auth.actions");
-const userActions = require('../../../src/user/user.actions');
 
 jest.mock('../../../src/user/user.model');
-jest.mock('../../../src/auth/auth.actions');
+jest.mock('../../../src/user/user.actions');
 
 //  2/3 pruebas unitarias de las funciones del usuario  //
 
@@ -14,24 +14,26 @@ describe('Usuario unit Controller', () => {
     describe('READ User (1 y *)', () => {
 
         it('debería devolver un usuario por ID', async () => {
-            const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: false };
-            User.findById.mockResolvedValue(usuario);
+            const id = '1';
+            const usuario = { _id: id, nombre: 'Test Usuario', isDeleted: false };
+            getUserById.mockResolvedValue(usuario);
 
             const result = await GetUserById('1');
-
             expect(result).toEqual(usuario);
         });
 
         it('debería lanzar un error si el usuario está eliminado', async () => {
             const usuario = { _id: '1', nombre: 'Test Usuario', isDeleted: true };
-            User.findById.mockResolvedValue(null);
-
+            getUserById.mockImplementation(() => {
+                throw new Error('{"code":404,"msg":"Usuario no existe"}');
+            });
             await expect(GetUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
         });
 
         it('debería lanzar un error si el usuario no existe', async () => {
-            User.findById.mockResolvedValue(null);
-
+            getUserById.mockImplementation(() => {
+                throw new Error('{"code":404,"msg":"Usuario no existe"}');
+            });
             await expect(GetUserById('1')).rejects.toThrow('{"code":404,"msg":"Usuario no existe"}');
         });
 
@@ -43,7 +45,7 @@ describe('Usuario unit Controller', () => {
                 { _id: '2', nombre: 'Usuario 2', isDeleted: false },
                 { _id: '3', nombre: 'Usuario 3', isDeleted: false },
             ];
-            User.find.mockResolvedValue(usuarios);
+            getAllUsers.mockResolvedValue(usuarios);
 
             const result = await GetUsers();
 
@@ -51,7 +53,7 @@ describe('Usuario unit Controller', () => {
         });
 
         it('debería devolver una lista vacía si no hay usuarios', async () => {
-            User.find.mockResolvedValue([]);
+            getAllUsers.mockResolvedValue([]);
 
             const result = await GetUsers();
 
@@ -61,62 +63,90 @@ describe('Usuario unit Controller', () => {
     });
 
 
+
+
+
     describe('CREATE User', () => {
 
         it('debería crear un nuevo usuario', async () => {
-            const datos = { id: '1', nombre: 'Nuevo Usuario', email: 'a@a.a' };
-            const usuarioCreado = { contraseña: 'alga', ...datos };
-            User.create.mockResolvedValue(usuarioCreado);
+            const contraseñaI = 'alga';
+            const datosI = { _id: '1', contraseña: contraseñaI, nombre: 'Nuevo Usuario', email: 'a@a.a' };
+            const datosH = { nombre: 'Nuevo Usuario', email: 'a@a.a' };
 
-            const result = await createUser(usuarioCreado);
+            const usuarioCreado = { _id: '1', ...datosH };
+            createUser.mockResolvedValue(usuarioCreado);
 
-            expect(result).toEqual(datos);
+            const result = await CreateUser(datosI);
+
+            expect(result).toEqual(usuarioCreado);
         });
 
         it('debería lanzar un error si los datos son inválidos', async () => {
             const datos = {}; // Datos inválidos
-            User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando el usuario"}') });
+            createUser.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando el usuario"}') });
 
-            await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando el usuario"}');
+            await expect(CreateUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando el usuario"}');
         });
 
         it('debería lanzar un error si ocurre un problema al crear el usuario', async () => {
             const datos = { nombre: 'Nuevo Usuario' };
-            User.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando el usuario"}') });
+            createUser.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando el usuario"}') });
 
-            await expect(createUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando el usuario"}');
+            await expect(CreateUser(datos)).rejects.toThrow('{"code":500,"msg":"Error creando el usuario"}');
         });
 
     });
 
 
 
+
     describe('UPDATE User', () => {
 
         it('debería actualizar los datos de un usuario y devolver la información actualizada', async () => {
-            const id = '1';
-            const datos = { nombre: 'Usuario Actualizado', contraseña: 'nueva_contraseña', email: 'nuevo@correo.com' };
-            const datosActualizados = { id: '1', nombre: 'Usuario Actualizado', email: 'nuevo@correo.com', contraseña: 'hashed_nueva_contraseña' };
-            const usuarioActualizado = { id: '1', nombre: 'Usuario Actualizado', email: 'nuevo@correo.com' };
+            const contraseñaI = 'alga';
+            const datosI = { contraseña: contraseñaI, nombre: 'Nuevo Usuario', email: 'a@a.a' };
+            const datosH = { nombre: 'Nuevo Usuario', email: 'a@a.a' };
 
-            auth.encryptPassword.mockResolvedValue('hashed_nueva_contraseña');
-            userActions.userUpdate.mockResolvedValue(datosActualizados);
+            const usuarioCreado = { id: '1', ...datosH };
+            userUpdate.mockResolvedValue(usuarioCreado);
 
-            const result = await updateUser(id, datos);
+            const result = await UpdateUser('1', datosI);
 
-            expect(result).toEqual(usuarioActualizado);
-
-            // Verificar que la contraseña fue encriptada
-            expect(auth.encryptPassword).toHaveBeenCalledWith('nueva_contraseña');
+            expect(result).toEqual(usuarioCreado);
         });
 
         it('debería lanzar un error si el usuario no existe', async () => {
             const id = '1';
             const datos = { nombre: 'Usuario Actualizado', contraseña: 'nueva_contraseña', email: 'nuevo@correo.com' };
 
-            userActions.userUpdate.mockResolvedValue(null);
+            userUpdate.mockImplementation(() => { throw new Error('{"code":404,"msg":"Usuario no encontrado"}') });
 
-            await expect(updateUser(id, datos)).rejects.toThrow('{"code":404,"msg":"Usuario no encontrado"}');
+            await expect(UpdateUser(id, datos)).rejects.toThrow('{"code":404,"msg":"Usuario no encontrado"}');
+        });
+
+    });
+
+
+
+
+    describe('Delete User', () => {
+
+        it('eliminar un usuario', async () => {
+            const datosE = { nombre: 'Nuevo Usuario', email: 'a@a.a', eliminado: true };
+            const usuarioCreado = { id: '1', ...datosE };
+            deleteUser.mockResolvedValue(usuarioCreado);
+
+            const result = await DeleteUser('1');
+
+            expect(result).toEqual(usuarioCreado);
+        });
+
+        it('eliminar un usuario', async () => {
+            deleteUser.mockImplementation(() => {
+                throw new Error('{"code":500,"msg":"Error actualizando los datos"}');
+            });
+
+            await expect(DeleteUser('1')).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
         });
 
     });

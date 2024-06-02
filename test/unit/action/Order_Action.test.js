@@ -1,4 +1,4 @@
-const { createOrder, getOrder, getOrders, updateOrderComprador, updateOrderVendedor } = require('../../../src/order/order.actions');
+const { createOrder, getOrder, getOrders, updateOrder, deleteOrder } = require('../../../src/order/order.actions');
 const Order = require('../../../src/order/order.model');
 const User = require('../../../src/user/user.model');
 const Libro = require('../../../src/book/book.model');
@@ -29,9 +29,6 @@ describe('Pedido unit Actions', () => {
 
         //para varios pedidos
         it('debería devolver una lista de pedidos', async () => {
-            const datos = { nombre: 'Nuevo Usuario' };
-            const usuarioCreado = { _id: '1', ...datos };
-            User.create.mockResolvedValue(usuarioCreado);
 
             const libros1 = [{ _id: '1', titulo: 'Libro 1' }, { _id: '2', titulo: 'Libro 2' }];
             const libros2 = [{ _id: '1', titulo: 'a' }, { _id: '2', titulo: 'patata' }];
@@ -41,24 +38,131 @@ describe('Pedido unit Actions', () => {
                 { _id: '2', libros_ids: libros2, estado: "en progreso", direccion_envio: "uninorte" },
                 { _id: '3', libros_ids: libros3, estado: "en progreso", direccion_envio: "alla" },
             ];
-            User.find.mockResolvedValue(pedidos);
+            Order.find.mockResolvedValue(pedidos);
 
             const results = await getOrders();
 
             expect(results).toEqual(pedidos);
+            expect(Order.find).toHaveBeenCalled();
         });
 
         it('debería devolver una lista vacía si no hay pedidos', async () => {
             Order.find.mockResolvedValue([]);
 
-            const result = await getOrders();
+            const results = await getOrders();
 
-            expect(result).toEqual([]);
+            expect(results).toEqual([]);
         });
-
-
 
     });
 
+
+
+    describe('CREATE Order', () => {
+        it('debería crear un nuevo pedido', async () => {
+            const libros = [{ _id: '1', titulo: 'Libro 1' }, { _id: '2', titulo: 'Libro 2' }];
+            const pedido = { libros_ids: libros, estado: "en progreso", direccion_envio: "aca" };
+            const pedir = { _id: '1', ...pedido }
+            Order.create.mockResolvedValue(pedir);
+
+            const result = await createOrder(pedido);
+
+            expect(result).toEqual(pedir);
+        });
+
+        it('debería lanzar un error si los datos son inválidos', async () => {
+            const datos = {}; // Datos inválidos
+            Order.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando en la base de datos"}') });
+
+            await expect(createOrder(datos)).rejects.toThrow('{"code":500,"msg":"Error creando en la base de datos"}');
+        });
+
+        it('debería lanzar un error si ocurre un problema al crear el pedido', async () => {
+            const datos = { estado: "en progreso" };
+            Order.create.mockImplementation(() => { throw new Error('{"code":500,"msg":"Error creando el pedido"}') });
+
+            await expect(createOrder(datos)).rejects.toThrow('{"code":500,"msg":"Error creando el pedido"}');
+        });
+    });
+
+
+
+    describe('UPDATE Order', () => {
+
+        it('debería actualizar un pedido', async () => {
+            const id = '1';
+            const datos = { estado: 'completado', direccion_envio: 'nueva dirección' };
+            const pedidoActualizado = {
+                _id: id,
+                libros_ids: [{ _id: '1', titulo: 'miss me' }, { _id: '2', titulo: 'why' }],
+                estado: 'completado',
+                direccion_envio: 'aca',
+            };
+
+            Order.findByIdAndUpdate.mockResolvedValue(pedidoActualizado);
+
+            const result = await updateOrder(id, datos);
+
+            expect(result).toEqual(pedidoActualizado);
+
+            // Verificar que se llamó a la función de actualización del pedido
+            expect(Order.findByIdAndUpdate).toHaveBeenCalledWith(id, datos);
+        });
+
+        it('debería lanzar un error si los datos son inválidos', async () => {
+            const id = '1';
+            const datos = { estado: 'completado', direccion_envio: 'nueva dirección' };
+
+            Order.findByIdAndUpdate.mockResolvedValue(null);
+
+            await expect(updateOrder(id, datos)).rejects.toThrow('{"code":404,"msg":"Pedido no encontrado"}');
+        });
+
+    });
+
+
+
+
+    describe('Delete Order', () => {
+
+        it('eliminar una orden', async () => {
+            const id = '1';
+            const datos = { estado: 'completado', direccion_envio: 'nueva dirección' };
+            const pedidoActualizado = {
+                _id: id,
+                libros_ids: [{ _id: '1', titulo: 'miss me' }, { _id: '2', titulo: 'why' }],
+                estado: 'cancelada',
+                direccion_envio: 'aca',
+            };
+
+            Order.findByIdAndUpdate.mockResolvedValue(pedidoActualizado);
+
+            const result = await deleteOrder(id, datos);
+
+            expect(result).toEqual(pedidoActualizado);
+
+            // Verificar que se llamó a la función de actualización del pedido
+            expect(Order.findByIdAndUpdate).toHaveBeenCalledWith(id, datos);
+        });
+
+        it('eliminar una orden (ERROR)', async () => {
+            const id = '1';
+            const datos = { estado: 'completado', direccion_envio: 'nueva dirección' };
+            const pedidoActualizado = {
+                _id: id,
+                libros_ids: [{ _id: '1', titulo: 'miss me' }, { _id: '2', titulo: 'why' }],
+                estado: 'cancelada',
+                direccion_envio: 'aca',
+            };
+
+
+            Order.findByIdAndUpdate.mockImplementation(() => {
+                throw new Error('{"code":500,"msg":"Error actualizando los datos"}');
+            });
+
+            await expect(deleteOrder('1')).rejects.toThrow('{"code":500,"msg":"Error actualizando los datos"}');
+        });
+
+    });
 
 });

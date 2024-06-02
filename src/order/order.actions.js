@@ -16,25 +16,10 @@ async function getOrder(idOrder) {
   }
 }
 
-async function getOrders(userId, filtros) {
-  const user = await userActions.getUserById(userId);
-  if (Object.keys(filtros).length === 0) {
-    const ordersPromises = user.books_purchased.map(async (orderId) => {
-      const order = await Order.findById(orderId);
-      return order;
-    });
-
-    const orders = await Promise.all(ordersPromises);
-    console.log("orders", orders);
-    return orders;
-  } else {
-    const orders = await user.books_purchased.map(async (orderId) => {
-      const order = await Order.findById(orderId);
-      const cumpleFiltros = await validarfiltros(filtros || {}, order);
-      return cumpleFiltros ? order : null;
-    });
-    return orders;
-  }
+async function getOrders() {
+  const orders = await Order.find();
+  return orders;
+  
 }
 
 async function validarfiltros(filtros, order) {
@@ -97,6 +82,25 @@ async function updateOrderVendedor(order, estado) {
   return order;
 }
 
+async function updateOrder(id, data) {
+  
+  const orderUpdated = await Order.findByIdAndUpdate(id, data);
+  if (!orderUpdated) {
+    throw new Error('{"code":404,"msg":"Pedido no encontrado"}');
+  }
+  return orderUpdated;
+
+}
+
+async function deleteOrder(id) {
+  
+  const orderCancelled = await Order.findByIdAndUpdate(id, { estado: 'cancelada' });
+  if (!orderCancelled) {
+    throw new Error('{"code":404,"msg":"Pedido no encontrado"}');
+  }
+  return orderCancelled;
+}
+
 module.exports = {
   createOrder,
   getOrder,
@@ -104,4 +108,6 @@ module.exports = {
   verifyUser,
   updateOrderComprador,
   updateOrderVendedor,
+  updateOrder,
+  deleteOrder
 };
