@@ -1,0 +1,27 @@
+Testeo para el backend de una aplicacion de compra y venta de libros usados.
+
+-3 modelos: User, Order, Book
+-6 tipos de pruebas:
+  + unitarias de accion
+  + unitarias de controlador
+  + unitarias de ruta
+  + integracion entre controlador y accion
+  + integracion entre ruta y controlador
+  + End to End
+
+-18 pruebas en total
+
+*para ejecutar se requiere jest:
+> npx jest  
+	o
+> npm install jest
+
+
+*y tambien se requiere
+> npx mongoose 
+	o
+> npm install mongoose
+
+
+*Luego para ejecutar se puede usar nuevamente el comando que ejecutara las 18 pruebas:
+> npx jes
